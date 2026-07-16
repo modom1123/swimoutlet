@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poseidon Aquatics — Team Store Prototype | SwimOutlet</title>
+<style>
+  :root{
+    --pool-deep: #0B4F6C;
+    --pool-deeper: #073A50;
+    --pool-surface: #4FB6C7;
+    --coral: #FF6B4A;
+    --coral-dark: #E0552F;
+    --lane-yellow: #FFC94A;
+    --foam: #F4FAFA;
+    --ink: #0A2A33;
+    --ink-soft: #4A6873;
+    --line: #D8E7EA;
+    --radius: 14px;
+    --team-primary: var(--pool-deep);
+    --team-secondary: var(--coral);
+  }
+
+  *{ box-sizing: border-box; }
+  html{ scroll-behavior: smooth; }
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--foam);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .display{
+    font-family: "Arial Narrow", "Helvetica Neue Condensed", "Roboto Condensed", Arial, sans-serif;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .mono{
+    font-family: "SF Mono", "Roboto Mono", "Consolas", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  a{ color: inherit; }
+  button{ font-family: inherit; cursor: pointer; }
+  :focus-visible{ outline: 3px solid var(--lane-yellow); outline-offset: 2px; }
+
+  /* ---------- Lane-rope divider (signature element) ---------- */
+  .lane-divider{
+    height: 22px;
+    width: 100%;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--coral) 0px, var(--coral) 26px,
+      var(--lane-yellow) 26px, var(--lane-yellow) 52px
+    );
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='22' viewBox='0 0 60 22'><path d='M0 11 Q 15 0 30 11 T 60 11 V22 H0 Z' fill='black'/></svg>");
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='60' height='22' viewBox='0 0 60 22'><path d='M0 11 Q 15 0 30 11 T 60 11 V22 H0 Z' fill='black'/></svg>");
+    -webkit-mask-size: 60px 22px;
+    mask-size: 60px 22px;
+    -webkit-mask-repeat: repeat-x;
+    mask-repeat: repeat-x;
+    opacity: 0.9;
+  }
+
+  /* ---------- Top bar / lane toggle ---------- */
+  .topbar{
+    position: sticky; top:0; z-index: 50;
+    background: var(--pool-deep);
+    color: var(--foam);
+    padding: 14px 20px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap: wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{ width:30px; height:30px; flex-shrink:0; }
+  .brand-text{ font-size: 15px; line-height:1.15; }
+  .brand-text b{ display:block; font-size: 17px; letter-spacing: 0.02em; }
+  .brand-text span{ opacity:0.75; font-size:12px; }
+
+  .lane-toggle{
+    position: relative;
+    display:flex;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 999px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .lane-toggle button{
+    position: relative; z-index: 2;
+    border:none; background:transparent; color: var(--foam);
+    padding: 9px 20px;
+    border-radius: 999px;
+    font-size: 13px; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    opacity: 0.7;
+    transition: opacity .2s ease, color .2s ease;
+  }
+  .lane-toggle button[aria-selected="true"]{ opacity:1; color: var(--pool-deep); }
+  .lane-toggle .thumb{
+    position:absolute; top:4px; bottom:4px; left:4px;
+    width: calc(50% - 4px);
+    background: var(--foam);
+    border-radius: 999px;
+    transition: transform .35s cubic-bezier(.65,0,.35,1);
+    z-index:1;
+  }
+  .lane-toggle[data-active="parent"] .thumb{ transform: translateX(100%); }
+
+  main{ max-width: 1080px; margin: 0 auto; padding: 0 20px 80px; }
+  .view{ animation: rise .4s ease both; }
+  @keyframes rise{ from{ opacity:0; transform: translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  [hidden]{ display:none !important; }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding: 46px 0 28px; }
+  .eyebrow{
+    font-size: 12px; letter-spacing: 0.12em; text-transform:uppercase;
+    color: var(--coral-dark); font-weight:800; margin-bottom:10px;
+  }
+  .hero h1{
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.05;
+    margin: 0 0 12px;
+    color: var(--pool-deep);
+  }
+  .hero p{ font-size: 16px; color: var(--ink-soft); max-width: 560px; margin:0; line-height:1.5; }
+
+  /* ---------- Steps (Coach) ---------- */
+  .steps{ display:flex; gap:10px; margin: 28px 0 20px; flex-wrap:wrap; }
+  .step-btn{
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid var(--line); border-radius: 999px;
+    padding: 8px 16px 8px 8px; font-size:13px; font-weight:700; color: var(--ink-soft);
+  }
+  .step-btn .num{
+    width:22px; height:22px; border-radius:50%; background: var(--line); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:12px;
+  }
+  .step-btn[aria-current="step"]{ border-color: var(--pool-deep); color: var(--pool-deep); }
+  .step-btn[aria-current="step"] .num{ background: var(--pool-deep); }
+  .step-btn.done .num{ background: var(--coral); }
+  .step-btn.done{ color: var(--ink); }
+
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius: var(--radius);
+    padding: 24px; margin-bottom: 18px;
+  }
+  .card h2{ margin:0 0 4px; font-size:19px; color: var(--pool-deep); }
+  .card .sub{ margin:0 0 18px; color: var(--ink-soft); font-size: 13.5px; }
+
+  .field{ margin-bottom:16px; }
+  .field label{ display:block; font-size:12px; font-weight:700; color: var(--ink-soft); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.04em; }
+  .field input[type=text], .field input[type=date]{
+    width:100%; padding: 10px 12px; border-radius:8px; border:1px solid var(--line); font-size:14px; color: var(--ink);
+  }
+  .row{ display:flex; gap:16px; flex-wrap:wrap; }
+  .row > *{ flex:1; min-width:180px; }
+
+  .swatches{ display:flex; gap:10px; }
+  .swatch{
+    width:40px; height:40px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1.5px var(--line);
+    cursor:pointer; position:relative;
+  }
+  .swatch[aria-pressed="true"]::after{
+    content:""; position:absolute; inset:-5px; border-radius:50%; border:2px solid var(--pool-deep);
+  }
+
+  .dropzone{
+    border:2px dashed var(--line); border-radius:10px; padding: 22px; text-align:center; color: var(--ink-soft);
+    font-size:13.5px; transition: border-color .2s, background .2s;
+  }
+  .dropzone.uploaded{ border-color: var(--coral); background: #FFF4F0; color: var(--ink); }
+  .dropzone button{
+    margin-top:10px; background: var(--pool-deep); color:#fff; border:none; padding:8px 16px;
+    border-radius:8px; font-size:13px; font-weight:700;
+  }
+
+  .chip-group{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip{
+    border:1px solid var(--line); background:#fff; padding:8px 14px; border-radius:999px; font-size:13px; font-weight:600; color: var(--ink-soft);
+  }
+  .chip[aria-pressed="true"]{ background: var(--pool-deep); color:#fff; border-color: var(--pool-deep); }
+
+  .btn-primary{
+    background: var(--coral); color:#fff; border:none; padding: 12px 22px; border-radius:8px;
+    font-size:14px; font-weight:800; letter-spacing:0.02em;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .btn-primary:hover{ background: var(--coral-dark); transform: translateY(-1px); }
+  .btn-ghost{
+    background:transparent; border:1px solid var(--line); color: var(--ink-soft); padding:12px 20px; border-radius:8px; font-size:14px; font-weight:700;
+  }
+  .step-actions{ display:flex; justify-content:space-between; margin-top: 4px; gap:10px; flex-wrap:wrap; }
+
+  .preview-card{
+    border-radius: 12px; overflow:hidden; border:1px solid var(--line);
+  }
+  .preview-banner{
+    height: 90px; background: linear-gradient(120deg, var(--team-primary), var(--team-secondary));
+    display:flex; align-items:center; padding: 0 20px; color:#fff;
+  }
+  .preview-banner b{ font-size:18px; }
+  .preview-body{ padding: 16px 20px; font-size:13.5px; color: var(--ink-soft); }
+
+  .confirm-banner{
+    display:flex; align-items:center; gap:12px; background:#EAF6E9; border:1px solid #BFE3BC; color:#1E5C1B;
+    padding:14px 18px; border-radius:10px; font-size:14px; font-weight:600; margin-top:16px;
+  }
+
+  /* ---------- Dashboard ---------- */
+  .dash{ display:grid; grid-template-columns: 1.3fr 1fr; gap: 18px; }
+  @media (max-width: 720px){ .dash{ grid-template-columns: 1fr; } }
+  .dash-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; }
+  .progress-track{ height:12px; background: var(--line); border-radius:999px; overflow:hidden; }
+  .progress-fill{ height:100%; background: linear-gradient(90deg, var(--pool-deep), var(--pool-surface)); border-radius:999px; }
+  .progress-label{ display:flex; justify-content:space-between; font-size:12.5px; color: var(--ink-soft); margin-top:8px; }
+  .clock{
+    background: var(--pool-deep); color: var(--lane-yellow); border-radius:10px; padding:16px 18px;
+    display:flex; align-items:center; justify-content:space-between; margin-top:16px;
+  }
+  .clock .n{ font-size:28px; font-weight:800; }
+  .clock .l{ font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:#B9D8E0; }
+  .roster-missing{ margin-top:16px; }
+  .roster-missing h3{ font-size:12px; text-transform:uppercase; letter-spacing:0.06em; color: var(--ink-soft); margin: 0 0 10px; }
+  .roster-missing ul{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .roster-missing li{
+    display:flex; justify-content:space-between; font-size:13.5px; background:#FFF7ED; border:1px solid #FBE3C7;
+    padding:8px 12px; border-radius:8px;
+  }
+  .roster-missing li span.tag{ color: var(--coral-dark); font-weight:700; font-size:11.5px; }
+
+  /* ---------- Parent view ---------- */
+  .storefront-banner{
+    border-radius: var(--radius); overflow:hidden; margin: 6px 0 26px;
+    background: linear-gradient(120deg, var(--team-primary), var(--team-secondary));
+    color:#fff; padding: 30px 26px; position:relative;
+  }
+  .storefront-banner .tag{ font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; margin-bottom:6px; }
+  .storefront-banner h2{ margin:0 0 8px; font-size: 26px; }
+  .storefront-banner p{ margin:0; opacity:0.9; font-size:13.5px; max-width:460px; }
+
+  .grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:16px; margin-bottom: 26px; }
+  .product{
+    background:#fff; border:1px solid var(--line); border-radius: 12px; overflow:hidden; display:flex; flex-direction:column;
+  }
+  .product-art{
+    height: 108px; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, #EAF6F8, #DDF0F2);
+  }
+  .product-body{ padding: 14px 16px 16px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .product-body h3{ margin:0; font-size:14.5px; }
+  .product-meta{ display:flex; justify-content:space-between; align-items:center; font-size:13px; color: var(--ink-soft); }
+  .size-link{ background:none; border:none; color: var(--pool-deep); font-size:12px; font-weight:700; text-decoration:underline; padding:0; }
+  .add-btn{
+    margin-top:auto; background: var(--pool-deep); color:#fff; border:none; border-radius:8px; padding:9px; font-size:13px; font-weight:700;
+  }
+  .add-btn[aria-pressed="true"]{ background: var(--coral); }
+
+  .cart-bar{
+    position: sticky; bottom: 14px; margin-top: 10px;
+    background: var(--pool-deep); color:#fff; border-radius: 12px; padding: 14px 18px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    box-shadow: 0 10px 30px rgba(11,79,108,0.35);
+  }
+  .cart-bar .left{ font-size:13.5px; }
+  .cart-bar .left b{ font-size:15px; }
+  .cart-bar .deadline{ font-size:11.5px; color: var(--lane-yellow); }
+
+  /* ---------- Modal (size guide) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background: rgba(10,42,51,0.55); display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:100;
+  }
+  .modal{
+    background:#fff; border-radius:14px; max-width: 460px; width:100%; padding:24px; position:relative;
+  }
+  .modal h3{ margin:0 0 4px; color:var(--pool-deep); }
+  .modal .sub{ font-size:13px; color:var(--ink-soft); margin:0 0 16px; }
+  .modal table{ width:100%; border-collapse: collapse; font-size:13px; }
+  .modal th, .modal td{ text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  .modal th{ color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:0.04em; }
+  .modal-close{
+    position:absolute; top:14px; right:14px; background:none; border:none; font-size:20px; color:var(--ink-soft); line-height:1;
+  }
+
+  footer{ text-align:center; padding: 30px 20px 50px; color: var(--ink-soft); font-size:12px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <svg class="brand-mark" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="15" cy="15" r="14" stroke="#F4FAFA" stroke-width="1.5"/>
+      <path d="M4 18c2-3 4-3 6 0s4 3 6 0 4-3 6 0 4 3 6 0" stroke="#F4FAFA" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M4 12c2-3 4-3 6 0s4 3 6 0 4-3 6 0 4 3 6 0" stroke="#FF6B4A" stroke-width="1.6" stroke-linecap="round" opacity="0.85"/>
+    </svg>
+    <div class="brand-text">
+      <b>Poseidon Aquatics</b>
+      <span>Team Store · powered by SwimOutlet — prototype</span>
+    </div>
+  </div>
+  <div class="lane-toggle" id="laneToggle" data-active="coach">
+    <div class="thumb"></div>
+    <button type="button" id="btnCoach" aria-selected="true">Coach Lane</button>
+    <button type="button" id="btnParent" aria-selected="false">Parent Lane</button>
+  </div>
+</div>
+
+<div class="lane-divider"></div>
+
+<main>
+
+  <!-- ================= COACH VIEW ================= -->
+  <section class="view" id="coachView">
+    <div class="hero">
+      <div class="eyebrow">Coach &amp; Team Admin</div>
+      <h1>Set up your team store<br>in under 10 minutes</h1>
+      <p>From roster to storefront — build a store your swimmers' parents will actually use, without chasing spreadsheets or size slips.</p>
+    </div>
+
+    <div class="steps">
+      <button class="step-btn" id="stepBtn1" data-step="1" aria-current="step"><span class="num">1</span> Team Basics</button>
+      <button class="step-btn" id="stepBtn2" data-step="2"><span class="num">2</span> Store Window</button>
+      <button class="step-btn" id="stepBtn3" data-step="3"><span class="num">3</span> Preview &amp; Publish</button>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="card" id="step1">
+      <h2>Team basics</h2>
+      <p class="sub">This sets the identity of your storefront — colors carry through to every product page.</p>
+      <div class="row">
+        <div class="field">
+          <label for="teamName">Team name</label>
+          <input type="text" id="teamName" value="Poseidon Aquatics">
+        </div>
+        <div class="field">
+          <label>Team colors</label>
+          <div class="swatches" id="swatches">
+            <span class="swatch" style="background:#0B4F6C" data-color="#0B4F6C" data-role="primary" aria-pressed="true" role="button" tabindex="0" aria-label="Deep pool blue, primary"></span>
+            <span class="swatch" style="background:#FF6B4A" data-color="#FF6B4A" data-role="secondary" aria-pressed="true" role="button" tabindex="0" aria-label="Coral, secondary"></span>
+            <span class="swatch" style="background:#1B7A3D" data-color="#1B7A3D" data-role="primary" aria-pressed="false" role="button" tabindex="0" aria-label="Team green"></span>
+            <span class="swatch" style="background:#7A2E8C" data-color="#7A2E8C" data-role="secondary" aria-pressed="false" role="button" tabindex="0" aria-label="Team violet"></span>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Roster</label>
+        <div class="dropzone" id="dropzone">
+          <div id="dzText">Drag in a roster CSV, or import from your team management tool</div>
+          <button type="button" id="dzBtn">Import roster.csv</button>
+        </div>
+      </div>
+      <div class="step-actions">
+        <span></span>
+        <button class="btn-primary" id="toStep2">Continue to store window →</button>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card" id="step2" hidden>
+      <h2>Store window</h2>
+      <p class="sub">Choose what's for sale and how long parents have to order — everything ships together after the window closes.</p>
+      <div class="field">
+        <label for="deadline">Order deadline</label>
+        <input type="date" id="deadline" value="2026-08-08">
+      </div>
+      <div class="field">
+        <label>Gear available in this store</label>
+        <div class="chip-group" id="gearChips">
+          <button class="chip" aria-pressed="true" data-item="Tech Suit">Tech Suit</button>
+          <button class="chip" aria-pressed="true" data-item="Team Jammer">Team Jammer</button>
+          <button class="chip" aria-pressed="true" data-item="Silicone Cap">Silicone Cap</button>
+          <button class="chip" aria-pressed="true" data-item="Team Parka">Team Parka</button>
+          <button class="chip" aria-pressed="false" data-item="Mesh Gear Bag">Mesh Gear Bag</button>
+          <button class="chip" aria-pressed="false" data-item="Goggles">Goggles</button>
+        </div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-ghost" id="toStep1b">← Back</button>
+        <button class="btn-primary" id="toStep3">Continue to preview →</button>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card" id="step3" hidden>
+      <h2>Preview &amp; publish</h2>
+      <p class="sub">This is exactly what parents will see when the store goes live.</p>
+      <div class="preview-card">
+        <div class="preview-banner"><b id="previewName">Poseidon Aquatics Team Store</b></div>
+        <div class="preview-body" id="previewBody">Orders close Aug 8, 2026 · 4 items available</div>
+      </div>
+      <div class="step-actions">
+        <button class="btn-ghost" id="toStep2b">← Back</button>
+        <button class="btn-primary" id="publishBtn">Publish store</button>
+      </div>
+      <div class="confirm-banner" id="publishConfirm" hidden>✓ Store published — parents can now shop and order for Poseidon Aquatics.</div>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="card">
+      <div class="dash-head">
+        <h2 style="margin:0;">Order status</h2>
+        <span style="font-size:12.5px; color:var(--ink-soft);">Live</span>
+      </div>
+      <div class="dash">
+        <div>
+          <div class="progress-track"><div class="progress-fill" style="width:75%"></div></div>
+          <div class="progress-label"><span>18 of 24 swimmers ordered</span><span>75%</span></div>
+          <div class="clock">
+            <div><div class="n mono">6</div><div class="l">Days left</div></div>
+            <div><div class="n mono">$1,842</div><div class="l">Ordered so far</div></div>
+            <div><div class="n mono">24</div><div class="l">Roster size</div></div>
+          </div>
+        </div>
+        <div class="roster-missing">
+          <h3>Haven't ordered yet</h3>
+          <ul>
+            <li>Jordan Ellis <span class="tag">Remind</span></li>
+            <li>Priya Nair <span class="tag">Remind</span></li>
+            <li>Sam Whitfield <span class="tag">Remind</span></li>
+            <li>Ana Torres <span class="tag">Remind</span></li>
+            <li>Marcus Boyd <span class="tag">Remind</span></li>
+            <li>Kiera Small <span class="tag">Remind</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= PARENT VIEW ================= -->
+  <section class="view" id="parentView" hidden>
+    <div class="storefront-banner" id="storefrontBanner">
+      <div class="tag">Team Store</div>
+      <h2 id="sbName">Poseidon Aquatics Team Store</h2>
+      <p>Gear picked by your coach, sized for swimmers, shipped together after <span id="sbDeadline">Aug 8</span>. No guessing which suit is "the team one."</p>
+    </div>
+
+    <div class="grid" id="productGrid"><!-- injected by JS --></div>
+
+    <div class="cart-bar">
+      <div class="left">Cart: <b id="cartCount">0 items</b> · <span id="cartTotal">$0.00</span></div>
+      <div class="deadline">Orders for this team close <span id="cartDeadline">Aug 8</span></div>
+      <button class="btn-primary" id="submitOrder">Submit team order</button>
+    </div>
+  </section>
+
+</main>
+
+<footer>Interactive prototype built by Mallory Odom for SwimOutlet's Senior Product Manager application — not affiliated with SwimOutlet.</footer>
+
+<div class="modal-overlay" id="sizeModalOverlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="sizeModalClose" aria-label="Close size guide">×</button>
+    <h3 id="sizeModalTitle">Size guide</h3>
+    <p class="sub" id="sizeModalSub">Swim gear runs differently than everyday clothing — measure, don't guess.</p>
+    <table id="sizeModalTable"></table>
+  </div>
+</div>
+
+<script>
+(function(){
+  const state = {
+    teamName: "Poseidon Aquatics",
+    primary: "#0B4F6C",
+    secondary: "#FF6B4A",
+    deadline: "2026-08-08",
+    gear: ["Tech Suit","Team Jammer","Silicone Cap","Team Parka"],
+    cart: {} // name -> qty
+  };
+
+  const products = {
+    "Tech Suit": { price: 64.99, sizeGuide: "jammer" },
+    "Team Jammer": { price: 38.99, sizeGuide: "jammer" },
+    "Silicone Cap": { price: 12.99, sizeGuide: "cap" },
+    "Team Parka": { price: 54.99, sizeGuide: "parka" },
+    "Mesh Gear Bag": { price: 24.99, sizeGuide: null },
+    "Goggles": { price: 16.99, sizeGuide: null }
+  };
+
+  const sizeGuides = {
+    jammer: {
+      title: "Jammer &amp; suit sizing",
+      sub: "Measure waist at the navel. Tech suits run tight by design — most swimmers stay true to size.",
+      rows: [["24","20\u201321\u2033"],["26","22\u201323\u2033"],["28","24\u201325\u2033"],["30","26\u201327\u2033"],["32","28\u201329\u2033"],["34","30\u201331\u2033"]]
+    },
+    cap: {
+      title: "Cap sizing",
+      sub: "One size fits most. For longer hair, add a bubble cap underneath rather than sizing up.",
+      rows: [["Youth","Head circ. under 21\u2033"],["Adult","21\u2033 and up"]]
+    },
+    parka: {
+      title: "Parka sizing",
+      sub: "Runs true to youth/adult sizing. Parkas are worn over a suit, so many swimmers size up one from streetwear.",
+      rows: [["YS \u2013 YL","Ages 6\u201314"],["AS \u2013 AXL","Ages 14+"]]
+    }
+  };
+
+  // ---- Lane toggle ----
+  const toggle = document.getElementById('laneToggle');
+  const btnCoach = document.getElementById('btnCoach');
+  const btnParent = document.getElementById('btnParent');
+  const coachView = document.getElementById('coachView');
+  const parentView = document.getElementById('parentView');
+
+  function setLane(lane){
+    toggle.dataset.active = lane;
+    btnCoach.setAttribute('aria-selected', lane === 'coach');
+    btnParent.setAttribute('aria-selected', lane === 'parent');
+    coachView.hidden = lane !== 'coach';
+    parentView.hidden = lane !== 'parent';
+    if(lane === 'parent'){ renderParent(); }
+  }
+  btnCoach.addEventListener('click', () => setLane('coach'));
+  btnParent.addEventListener('click', () => setLane('parent'));
+
+  // ---- Step nav ----
+  const steps = { 1: document.getElementById('step1'), 2: document.getElementById('step2'), 3: document.getElementById('step3') };
+  const stepBtns = { 1: document.getElementById('stepBtn1'), 2: document.getElementById('stepBtn2'), 3: document.getElementById('stepBtn3') };
+  function goStep(n){
+    Object.keys(steps).forEach(k => {
+      steps[k].hidden = Number(k) !== n;
+      stepBtns[k].removeAttribute('aria-current');
+      stepBtns[k].classList.toggle('done', Number(k) < n);
+    });
+    stepBtns[n].setAttribute('aria-current','step');
+    if(n === 3) updatePreview();
+  }
+  document.getElementById('toStep2').addEventListener('click', () => goStep(2));
+  document.getElementById('toStep1b').addEventListener('click', () => goStep(1));
+  document.getElementById('toStep3').addEventListener('click', () => goStep(3));
+  document.getElementById('toStep2b').addEventListener('click', () => goStep(2));
+  Object.values(stepBtns).forEach((btn, i) => btn.addEventListener('click', () => goStep(i+1)));
+
+  // ---- Team name ----
+  document.getElementById('teamName').addEventListener('input', (e) => {
+    state.teamName = e.target.value || "Your Team";
+  });
+
+  // ---- Swatches ----
+  document.querySelectorAll('.swatch').forEach(sw => {
+    sw.addEventListener('click', () => {
+      const role = sw.dataset.role;
+      document.querySelectorAll(`.swatch[data-role="${role}"]`).forEach(s => s.setAttribute('aria-pressed','false'));
+      sw.setAttribute('aria-pressed','true');
+      if(role === 'primary') state.primary = sw.dataset.color;
+      if(role === 'secondary') state.secondary = sw.dataset.color;
+      document.documentElement.style.setProperty('--team-primary', state.primary);
+      document.documentElement.style.setProperty('--team-secondary', state.secondary);
+    });
+    sw.addEventListener('keydown', (e) => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sw.click(); } });
+  });
+
+  // ---- Roster upload ----
+  document.getElementById('dzBtn').addEventListener('click', () => {
+    const dz = document.getElementById('dropzone');
+    dz.classList.add('uploaded');
+    document.getElementById('dzText').textContent = "24 swimmers imported from roster.csv";
+    document.getElementById('dzBtn').textContent = "Re-import";
+  });
+
+  // ---- Gear chips ----
+  document.querySelectorAll('#gearChips .chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const pressed = chip.getAttribute('aria-pressed') === 'true';
+      chip.setAttribute('aria-pressed', String(!pressed));
+      const item = chip.dataset.item;
+      if(!pressed){ if(!state.gear.includes(item)) state.gear.push(item); }
+      else { state.gear = state.gear.filter(g => g !== item); }
+    });
+  });
+
+  document.getElementById('deadline').addEventListener('change', (e) => { state.deadline = e.target.value; });
+
+  function formatDate(iso){
+    const d = new Date(iso + "T00:00:00");
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function updatePreview(){
+    document.getElementById('previewName').textContent = state.teamName + " Team Store";
+    document.getElementById('previewBody').textContent =
+      `Orders close ${formatDate(state.deadline)}, 2026 \u00b7 ${state.gear.length} item${state.gear.length===1?'':'s'} available`;
+  }
+
+  document.getElementById('publishBtn').addEventListener('click', () => {
+    document.getElementById('publishConfirm').hidden = false;
+  });
+
+  // ---- Parent view render ----
+  const grid = document.getElementById('productGrid');
+  function renderParent(){
+    document.getElementById('sbName').textContent = state.teamName + " Team Store";
+    document.getElementById('sbDeadline').textContent = formatDate(state.deadline);
+    document.getElementById('cartDeadline').textContent = formatDate(state.deadline);
+    document.getElementById('storefrontBanner').style.background =
+      `linear-gradient(120deg, ${state.primary}, ${state.secondary})`;
+
+    grid.innerHTML = '';
+    state.gear.forEach(name => {
+      const p = products[name];
+      if(!p) return;
+      const card = document.createElement('div');
+      card.className = 'product';
+      const inCart = !!state.cart[name];
+      card.innerHTML = `
+        <div class="product-art">
+          <svg width="46" height="46" viewBox="0 0 46 46" fill="none">
+            <circle cx="23" cy="23" r="20" stroke="${state.primary}" stroke-width="2" opacity="0.35"/>
+            <path d="M6 27c3-5 6-5 9 0s6 5 9 0 6-5 9 0 6 5 9 0" stroke="${state.secondary}" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="product-body">
+          <h3>${name}</h3>
+          <div class="product-meta">
+            <span>$${p.price.toFixed(2)}</span>
+            ${p.sizeGuide ? `<button class="size-link" data-guide="${p.sizeGuide}" data-name="${name}">Size guide</button>` : `<span></span>`}
+          </div>
+          <button class="add-btn" data-name="${name}" aria-pressed="${inCart}">${inCart ? 'Added \u2713' : 'Add to order'}</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+
+    grid.querySelectorAll('.add-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const name = btn.dataset.name;
+        if(state.cart[name]){ delete state.cart[name]; btn.setAttribute('aria-pressed','false'); btn.textContent = 'Add to order'; }
+        else { state.cart[name] = 1; btn.setAttribute('aria-pressed','true'); btn.textContent = 'Added \u2713'; }
+        updateCart();
+      });
+    });
+    grid.querySelectorAll('.size-link').forEach(btn => {
+      btn.addEventListener('click', () => openSizeModal(btn.dataset.guide, btn.dataset.name));
+    });
+    updateCart();
+  }
+
+  function updateCart(){
+    const items = Object.keys(state.cart);
+    const total = items.reduce((sum, name) => sum + (products[name]?.price || 0), 0);
+    document.getElementById('cartCount').textContent = `${items.length} item${items.length===1?'':'s'}`;
+    document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+  }
+
+  document.getElementById('submitOrder').addEventListener('click', () => {
+    const btn = document.getElementById('submitOrder');
+    btn.textContent = 'Order submitted \u2713';
+    setTimeout(() => { btn.textContent = 'Submit team order'; }, 2200);
+  });
+
+  // ---- Size modal ----
+  const overlay = document.getElementById('sizeModalOverlay');
+  function openSizeModal(key, productName){
+    const g = sizeGuides[key];
+    if(!g) return;
+    document.getElementById('sizeModalTitle').innerHTML = `${productName} \u2014 ${g.title}`;
+    document.getElementById('sizeModalSub').textContent = g.sub;
+    const table = document.getElementById('sizeModalTable');
+    table.innerHTML = `<tr><th>Size</th><th>Measurement</th></tr>` +
+      g.rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    overlay.hidden = false;
+  }
+  document.getElementById('sizeModalClose').addEventListener('click', () => overlay.hidden = true);
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.hidden = true; });
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape') overlay.hidden = true; });
+
+})();
+</script>
+</body>
+</html>
