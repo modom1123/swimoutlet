@@ -164,41 +164,41 @@ nav {
 }
 
 /* ============================================
-   ROW 3: Click Here · arrows · roster tile
+   ROW 3: Poseidon · arrows · Upload Roster
+   Columns are proportional to the artwork so
+   nothing crops: 1100 / 1222 / 1146 px wide.
    ============================================ */
 .row-3 {
     display: grid;
-    /* was: 1fr 3fr — third column added for the roster case study.
-       Nudge these three numbers if you want the arrows wider or narrower. */
-    grid-template-columns: 1fr 2fr 1fr;
-    align-items: stretch;
+    grid-template-columns: 1100fr 1222fr 1146fr;
+    align-items: center;
+}
+
+.row-3 .img-block {
+    min-width: 0;
 }
 
 .row-3 .img-block img {
     width: 100%;
+    height: auto;
+    display: block;
+}
+
+.row-3 .img-block .hover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    object-fit: cover;
-}
-
-/* the roster tile carries type, so letterbox it instead of cropping it */
-.row-3 .roster-tile img {
     object-fit: contain;
-    background: #1A5E63;
-}
-
-.row-3 .roster-tile .hover {
-    background: #D4B83D;
+    opacity: 0;
+    transition: opacity 0.3s;
 }
 
 /* stack row 3 on narrow screens so the tiles stay legible */
 @media (max-width: 760px) {
     .row-3 {
         grid-template-columns: 1fr;
-    }
-    .row-3 .img-block img,
-    .row-3 .roster-tile img {
-        height: auto;
-        object-fit: contain;
     }
 }
 
