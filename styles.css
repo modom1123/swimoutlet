@@ -164,17 +164,42 @@ nav {
 }
 
 /* ============================================
-   ROW 3: Click Here
+   ROW 3: Click Here · arrows · roster tile
    ============================================ */
 .row-3 {
     display: grid;
-    grid-template-columns: 1fr 3fr;
+    /* was: 1fr 3fr — third column added for the roster case study.
+       Nudge these three numbers if you want the arrows wider or narrower. */
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: stretch;
 }
 
 .row-3 .img-block img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* the roster tile carries type, so letterbox it instead of cropping it */
+.row-3 .roster-tile img {
+    object-fit: contain;
+    background: #1A5E63;
+}
+
+.row-3 .roster-tile .hover {
+    background: #D4B83D;
+}
+
+/* stack row 3 on narrow screens so the tiles stay legible */
+@media (max-width: 760px) {
+    .row-3 {
+        grid-template-columns: 1fr;
+    }
+    .row-3 .img-block img,
+    .row-3 .roster-tile img {
+        height: auto;
+        object-fit: contain;
+    }
 }
 
 /* ============================================
@@ -319,6 +344,20 @@ nav {
 
 .img-block:hover .hover {
     opacity: 1;
+}
+
+/* keyboard users get the hover state too */
+.img-block:focus-visible .default {
+    opacity: 0;
+}
+
+.img-block:focus-visible .hover {
+    opacity: 1;
+}
+
+.img-block:focus-visible {
+    outline: 3px solid #C41E7F;
+    outline-offset: 2px;
 }
 
 .clickable {
@@ -656,4 +695,21 @@ html, body {
     border-bottom: 2px solid #24356b;
     border-radius: 50%;
     transform: rotate(-1deg);
+}
+
+/* ============================================
+   REDUCED MOTION
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+    .img-block .hover,
+    .resume-link .default,
+    .resume-link .hover,
+    .resume-grid-item .hover,
+    .case-study-section > img.default,
+    .case-study-section > img.hover {
+        transition: none;
+    }
+    .mvp-paper {
+        animation: none;
+    }
 }
